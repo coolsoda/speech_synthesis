@@ -1,0 +1,83 @@
+# Downstream Regression Evaluation
+
+experiment:
+  name: "downstream_alstdi_lflow"
+  seed: 42
+  output_dir: "outputs/metrics/downstream_alstdi_lflow"
+
+dataset:
+  name: "alstdi"
+  real_metadata_path: "data/metadata/alstdi_metadata.csv"
+  synthetic_metadata_path: "outputs/generated_audio/alstdi_lflow/synthetic_metadata.csv"
+  split_path: "data/splits/alstdi_split.json"
+
+  subject_column: "subject_id"
+  audio_column: "audio_path"
+  transcript_column: "transcript"
+  time_column: "timestamp"
+  label_column: "label"
+
+  train_with_synthetic: true
+  evaluate_on_real_only: true
+  target: "label"
+
+features:
+  type: "audio_embedding"
+
+  audio_embedding:
+    model_name: "wav2vec2"
+    checkpoint: "facebook/wav2vec2-base"
+    layer: "last_hidden_state"
+    pooling: "mean"
+    cache_dir: "outputs/features/alstdi_wav2vec2"
+
+  handcrafted:
+    enabled: false
+    feature_set: "opensmile_egemaps"
+    cache_dir: "outputs/features/alstdi_opensmile"
+
+regressors:
+  ridge:
+    enabled: true
+    alpha: 1.0
+
+  xgboost:
+    enabled: true
+    n_estimators: 300
+    max_depth: 4
+    learning_rate: 0.03
+    subsample: 0.8
+    colsample_bytree: 0.8
+    objective: "reg:squarederror"
+
+  mlp:
+    enabled: true
+    input_dim: null
+    hidden_dims: [256, 128]
+    dropout: 0.3
+    activation: "relu"
+
+    training:
+      epochs: 100
+      batch_size: 32
+      lr: 0.0001
+      weight_decay: 0.0001
+      early_stopping: true
+      patience: 10
+
+evaluation:
+  metrics:
+    - "mae"
+    - "rmse"
+    - "spearman"
+
+  save_predictions: true
+  save_summary: true
+
+output:
+  prediction_file: "predictions.csv"
+  summary_file: "summary.json"
+
+device:
+  use_cuda: true
+  cuda_device: 0

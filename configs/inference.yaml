@@ -1,0 +1,100 @@
+# L-Flow Inference / Synthetic Speech Generation Configuration
+
+experiment:
+  name: "lflow_generate_alstdi"
+  seed: 42
+  output_dir: "outputs/generated_audio/alstdi_lflow"
+
+dataset:
+  name: "alstdi"  # options: alstdi, parkceleb
+  root_dir: "data/alstdi"
+  metadata_path: "data/metadata/alstdi_metadata.csv"
+  split_path: "data/splits/alstdi_split.json"
+
+  generate_for_split: "train"  # synthetic data should only be generated for training subjects
+
+  audio_column: "audio_path"
+  subject_column: "subject_id"
+  transcript_column: "transcript"
+  time_column: "timestamp"
+  label_column: "label"
+
+checkpoint:
+  lflow_path: "checkpoints/lflow_alstdi/best.pt"
+  vocoder_path: "checkpoints/vocoder/hifigan.pt"
+
+generation:
+  mode: "interpolation"  # only synthesize within observed temporal span
+
+  # Dataset-specific temporal resolution.
+  # For ALS-TDI, the paper uses h = 30 days, Mmax = 2.
+  # For ParkCeleb, the paper uses h = 800 days, Mmax = 3.
+  temporal_resolution_days: 30
+  max_samples_per_interval: 2
+
+  query_strategy: "uniform"
+  include_original_samples: false
+
+  ode_solver:
+    name: "euler"
+    num_steps: 32
+
+  noise:
+    type: "gaussian"
+    seed: 42
+
+conditioning:
+  use_full_history: true
+  use_text_condition: true
+  use_reference_speech: true
+  use_progression_condition: true
+  use_soft_label: true
+
+  reference_speech:
+    selection: "nearest_time"
+    tie_break: "earlier"
+
+  soft_label:
+    method: "linear_interpolation"
+
+preprocessing:
+  sample_rate: 16000
+
+  mel:
+    n_fft: 1024
+    hop_length: 256
+    win_length: 1024
+    n_mels: 100
+    f_min: 0
+    f_max: 8000
+    log_mel: true
+
+  text:
+    lowercase: true
+    use_char_level: true
+    filler_token: "<F>"
+    pad_to_mel_length: true
+
+output:
+  save_audio: true
+  save_mel: true
+  save_metadata: true
+
+  audio_format: "wav"
+  metadata_filename: "synthetic_metadata.csv"
+
+  columns:
+    subject_id: "subject_id"
+    query_time: "timestamp"
+    soft_label: "label"
+    transcript: "transcript"
+    generated_audio_path: "audio_path"
+    reference_audio_path: "reference_audio_path"
+    previous_time: "previous_timestamp"
+    next_time: "next_timestamp"
+    previous_label: "previous_label"
+    next_label: "next_label"
+
+device:
+  use_cuda: true
+  cuda_device: 0

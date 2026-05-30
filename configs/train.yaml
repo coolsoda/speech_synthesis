@@ -1,0 +1,130 @@
+# L-Flow Training Configuration
+
+experiment:
+  name: "lflow_alstdi"
+  seed: 42
+  output_dir: "outputs/runs/lflow_alstdi"
+  checkpoint_dir: "checkpoints/lflow_alstdi"
+  log_interval: 50
+  save_interval: 5
+  resume_from: null
+
+dataset:
+  name: "alstdi" 
+  root_dir: "data/alstdi"
+  metadata_path: "data/metadata/alstdi_metadata.csv"
+  split_path: "data/splits/alstdi_split.json"
+
+  sample_rate: 16000
+  normalize_labels: true
+  subject_level_split: true
+
+  audio_column: "audio_path"
+  subject_column: "subject_id"
+  transcript_column: "transcript"
+  time_column: "timestamp"
+  label_column: "label"
+
+preprocessing:
+  mel:
+    n_fft: 1024
+    hop_length: 256
+    win_length: 1024
+    n_mels: 100
+    f_min: 0
+    f_max: 8000
+    log_mel: true
+
+  max_audio_seconds: 30.0
+  min_audio_seconds: 1.0
+  trim_silence: true
+
+  text:
+    lowercase: true
+    use_char_level: true
+    filler_token: "<F>"
+    pad_to_mel_length: true
+
+training:
+  epochs: 100
+  batch_size: 8
+  num_workers: 4
+  gradient_accumulation_steps: 1
+  mixed_precision: true
+  max_grad_norm: 1.0
+
+  optimizer:
+    name: "adamw"
+    lr: 0.0001
+    weight_decay: 0.01
+    betas: [0.9, 0.999]
+
+  scheduler:
+    name: "cosine"
+    warmup_steps: 1000
+    min_lr: 0.000001
+
+model:
+  progression_encoder:
+    recording_dim: 256
+    time_dim: 64
+    label_dim: 64
+    hidden_dim: 256
+    num_layers: 4
+    num_heads: 4
+    dropout: 0.1
+    pooling: "query_token"
+
+  generator:
+    backbone: "dit"
+    mel_dim: 100
+    hidden_dim: 512
+    num_layers: 12
+    num_heads: 8
+    ff_mult: 4
+    dropout: 0.1
+
+    use_text_condition: true
+    use_reference_speech: true
+    use_progression_condition: true
+    use_severity_condition: true
+
+flow_matching:
+  sigma_min: 0.0
+  sigma_max: 1.0
+  noise_type: "gaussian"
+
+  mask:
+    strategy: "random_span"
+    min_mask_ratio: 0.3
+    max_mask_ratio: 0.8
+
+loss:
+  lambda_gen: 1.0
+  lambda_prog: 0.1
+  lambda_ord: 0.1
+
+  progression_regularization:
+    enabled: true
+    distance: "l2"
+
+  ordinal_regularization:
+    enabled: true
+    margin: 0.1
+
+reference_speech:
+  selection: "nearest_time"
+  tie_break: "earlier"
+
+validation:
+  enabled: true
+  val_interval: 1
+  num_samples_to_generate: 8
+
+vocoder:
+  name: "hifigan"
+  checkpoint_path: "checkpoints/vocoder/hifigan.pt"
+
+device:
+  use_cuda: true
+  cuda_device: 0

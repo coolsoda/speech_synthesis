@@ -1,0 +1,145 @@
+
+experiment:
+  name: "baselines_alstdi"
+  seed: 42
+  output_dir: "outputs/generated_audio/alstdi_baselines"
+  log_dir: "outputs/logs/baselines_alstdi"
+
+dataset:
+  name: "alstdi"  # options: alstdi, parkceleb
+  root_dir: "data/alstdi"
+  metadata_path: "data/metadata/alstdi_metadata.csv"
+  split_path: "data/splits/alstdi_split.json"
+
+  generate_for_split: "train"
+
+  audio_column: "audio_path"
+  subject_column: "subject_id"
+  transcript_column: "transcript"
+  time_column: "timestamp"
+  label_column: "label"
+
+generation:
+  mode: "interpolation"
+
+  # Use the same generation budget as L-Flow for fair comparison.
+  #
+  # ALS-TDI:
+  #   temporal_resolution_days: 30
+  #   max_samples_per_interval: 2
+  #
+  # ParkCeleb:
+  #   temporal_resolution_days: 800
+  #   max_samples_per_interval: 3
+  temporal_resolution_days: 30
+  max_samples_per_interval: 2
+
+  query_strategy: "uniform"
+  soft_label_method: "linear_interpolation"
+
+  sample_rate: 16000
+  audio_format: "wav"
+
+baselines:
+  signal_level:
+    speed_perturbation:
+      enabled: true
+      output_dir: "outputs/generated_audio/alstdi_baselines/speed_perturbation"
+
+      # Values can be adjusted
+      speed_factors: [0.9, 1.1]
+
+      preserve_duration_metadata: false
+
+    vtlp:
+      enabled: true
+      output_dir: "outputs/generated_audio/alstdi_baselines/vtlp"
+
+      # Vocal tract length perturbation factors.
+      warp_factors: [0.9, 1.1]
+
+      preserve_duration_metadata: false
+
+  modern_tts:
+    omnivoice:
+      enabled: false
+      output_dir: "outputs/generated_audio/alstdi_baselines/omnivoice"
+      checkpoint_path: "checkpoints/baselines/omnivoice"
+      external_repo_path: null
+      finetune_on_training_subjects: true
+      use_reference_speech: true
+      use_text_prompt: true
+
+    qwen3_tts:
+      enabled: false
+      output_dir: "outputs/generated_audio/alstdi_baselines/qwen3_tts"
+      checkpoint_path: "checkpoints/baselines/qwen3_tts"
+      external_repo_path: null
+      finetune_on_training_subjects: true
+      use_reference_speech: true
+      use_text_prompt: true
+
+    voxcpm2:
+      enabled: false
+      output_dir: "outputs/generated_audio/alstdi_baselines/voxcpm2"
+      checkpoint_path: "checkpoints/baselines/voxcpm2"
+      external_repo_path: null
+      finetune_on_training_subjects: true
+      use_reference_speech: true
+      use_text_prompt: true
+
+    xtts_v2:
+      enabled: false
+      output_dir: "outputs/generated_audio/alstdi_baselines/xtts_v2"
+      checkpoint_path: "checkpoints/baselines/xtts_v2"
+      external_repo_path: null
+      finetune_on_training_subjects: true
+      use_reference_speech: true
+      use_text_prompt: true
+
+  pathology_tts:
+    ttds:
+      enabled: false
+      output_dir: "outputs/generated_audio/alstdi_baselines/ttds"
+      checkpoint_path: "checkpoints/baselines/ttds"
+      external_repo_path: null
+      finetune_on_training_subjects: true
+      use_reference_speech: true
+      use_text_prompt: true
+      use_severity_condition: true
+
+    scp_tts:
+      enabled: false
+      output_dir: "outputs/generated_audio/alstdi_baselines/scp_tts"
+      checkpoint_path: "checkpoints/baselines/scp_tts"
+      external_repo_path: null
+      finetune_on_training_subjects: true
+      use_reference_speech: true
+      use_text_prompt: true
+      use_severity_condition: true
+
+reference_speech:
+  selection: "nearest_time"
+  tie_break: "earlier"
+
+output:
+  save_audio: true
+  save_metadata: true
+  metadata_filename: "synthetic_metadata.csv"
+
+  columns:
+    method: "method"
+    subject_id: "subject_id"
+    query_time: "timestamp"
+    soft_label: "label"
+    transcript: "transcript"
+    generated_audio_path: "audio_path"
+    reference_audio_path: "reference_audio_path"
+    previous_time: "previous_timestamp"
+    next_time: "next_timestamp"
+    previous_label: "previous_label"
+    next_label: "next_label"
+
+device:
+  use_cuda: true
+  cuda_device: 0
