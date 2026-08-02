@@ -68,7 +68,7 @@ data/parkceleb/audio/
 data/raw/
 data/external/
 
-*.wav
+
 *.flac
 *.mp3
 *.m4a
