@@ -1,0 +1,1 @@
+So, at an Irish set meeting today and we have our banquet coming up on Friday. So I have this one working on putting together a demo and it's just a live updating graph based upon magno meter readings. And, yeah, mostly working. It's still a little bit jinky, but overall it seemed relatively nice. So, yeah.

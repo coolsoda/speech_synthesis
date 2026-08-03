@@ -1,0 +1,1 @@
+I got a new task for my project that I am going to implement all file types for the printing feature.
